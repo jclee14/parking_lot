@@ -32,17 +32,11 @@ type ParkingLotService struct {
 }
 
 func NewParkingLotService() *ParkingLotService {
-	// if slotAmount < 1 {
-	// 	return nil, errors.New("slot amount must be greater than 0")
-	// }
-
-	// return &ParkingLotService{
-	// 	parkingSlots:          make([]*parkingSlot, slotAmount),
-	// 	slotNumbersByColor:    map[string]map[int]struct{}{},
-	// 	slotNumberByCarNumber: map[string]int{},
-	// }
-
-	return &ParkingLotService{}
+	return &ParkingLotService{
+		carNumbersByColor:     map[string]map[string]struct{}{},
+		slotNumbersByColor:    map[string]map[int]struct{}{},
+		slotNumberByCarNumber: map[string]int{},
+	}
 }
 
 func (svc *ParkingLotService) CreateParkingLot(slotAmount int) error {
@@ -53,8 +47,11 @@ func (svc *ParkingLotService) CreateParkingLot(slotAmount int) error {
 		return errors.New("slot amount must be greater than 0")
 	}
 
-	svc.parkingSlots = make([]*parkingSlot, slotAmount)
+	for i := 0; i < slotAmount; i++ {
+		svc.parkingSlots = append(svc.parkingSlots, &parkingSlot{})
+	}
 	fmt.Printf("Created a parking lot with %d slots\n", slotAmount)
+
 	return nil
 }
 
@@ -75,6 +72,7 @@ func (svc *ParkingLotService) Park(carNumber string, carColor string) (int, erro
 
 		slotNumber := idx + 1
 
+		slot.parkedCar = &car{}
 		slot.parkedCar.registrationNumber = carNumber
 		slot.parkedCar.color = carColor
 
