@@ -5,106 +5,65 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
 func main() {
-	var parkingLotSvc IParkingLotService = NewParkingLotService()
-	start(parkingLotSvc)
+	parkingLotHandler := NewParkingLotHandler()
+	start(parkingLotHandler)
 }
 
-func start(parkingLotSvc IParkingLotService) {
+func start(parkingLotHandler IParkingLotHandler) {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		text, _ := reader.ReadString('\n')
+		input, _ := reader.ReadString('\n')
 		// convert CRLF to LF
-		// text = strings.Replace(text, "\n", "", -1)
-		text = strings.TrimSpace(strings.Replace(text, "\r\n", "", -1))
-		if strings.HasPrefix(text, "create_parking_lot") {
-			subStrings := strings.Split(text, " ")
-			if len(subStrings) != 2 {
-				fmt.Println(errors.New("invalid format"))
-				continue
-			}
-			slotAmount, err := strconv.Atoi(subStrings[1])
+		// input = strings.Replace(input, "\n", "", -1)
+		input = strings.TrimSpace(strings.Replace(input, "\r\n", "", -1))
+		if strings.HasPrefix(input, "create_parking_lot") {
+			err := parkingLotHandler.CreateParkingLot(input)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			err = parkingLotSvc.CreateParkingLot(slotAmount)
+		} else if strings.HasPrefix(input, "park") {
+			err := parkingLotHandler.Park(input)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-		} else if strings.HasPrefix(text, "park") {
-			subStrings := strings.Split(text, " ")
-			if len(subStrings) != 3 {
-				fmt.Println(errors.New("invalid format"))
-				continue
-			}
-			_, err := parkingLotSvc.Park(subStrings[1], subStrings[2])
+		} else if strings.HasPrefix(input, "leave") {
+			err := parkingLotHandler.Leave(input)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-		} else if strings.HasPrefix(text, "leave") {
-			subStrings := strings.Split(text, " ")
-			if len(subStrings) != 2 {
-				fmt.Println(errors.New("invalid format"))
-				continue
-			}
-			slotAmount, err := strconv.Atoi(subStrings[1])
+		} else if strings.HasPrefix(input, "status") {
+			err := parkingLotHandler.GetStatus()
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			err = parkingLotSvc.Leave(slotAmount)
+		} else if strings.HasPrefix(input, "registration_numbers_for_cars_with_colour") {
+			err := parkingLotHandler.GetParkedCarNumbersByColor(input)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-		} else if strings.HasPrefix(text, "status") {
-			err := parkingLotSvc.PrintStatus()
+		} else if strings.HasPrefix(input, "slot_numbers_for_cars_with_colour") {
+			err := parkingLotHandler.GetParkedSlotNumbersByColor(input)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-		} else if strings.HasPrefix(text, "registration_numbers_for_cars_with_colour") {
-			subStrings := strings.Split(text, " ")
-			if len(subStrings) != 2 {
-				fmt.Println(errors.New("invalid format"))
-				continue
-			}
-			err := parkingLotSvc.PrintParkedCarNumbersByColor(subStrings[1])
+		} else if strings.HasPrefix(input, "slot_number_for_registration_number") {
+			err := parkingLotHandler.GetParkedSlotNumberByCarNumber(input)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-		} else if strings.HasPrefix(text, "slot_numbers_for_cars_with_colour") {
-			subStrings := strings.Split(text, " ")
-			if len(subStrings) != 2 {
-				fmt.Println(errors.New("invalid format"))
-				continue
-			}
-			err := parkingLotSvc.PrintParkedSlotNumbersByColor(subStrings[1])
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-		} else if strings.HasPrefix(text, "slot_number_for_registration_number") {
-			subStrings := strings.Split(text, " ")
-			if len(subStrings) != 2 {
-				fmt.Println(errors.New("invalid format"))
-				continue
-			}
-			err := parkingLotSvc.PrintParkedSlotNumberByCarNumber(subStrings[1])
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-		} else if strings.Contains(text, "exit") {
+		} else if strings.Contains(input, "exit") {
 			break
 		} else {
 			fmt.Println(errors.New("command not found"))

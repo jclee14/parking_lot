@@ -11,10 +11,10 @@ type IParkingLotService interface {
 	CreateParkingLot(slotAmount int) error
 	Park(carNumber string, carColor string) (int, error)
 	Leave(slotNumber int) error
-	PrintStatus() error
-	PrintParkedCarNumbersByColor(carColor string) error
-	PrintParkedSlotNumbersByColor(carColor string) error
-	PrintParkedSlotNumberByCarNumber(carNumber string) error
+	GetStatus() error
+	GetParkedCarNumbersByColor(carColor string) error
+	GetParkedSlotNumbersByColor(carColor string) error
+	GetParkedSlotNumberByCarNumber(carNumber string) error
 
 	addCarNumberToColorCache(carNumber string, carColor string) error
 	removeCarNumberFromColorCache(carNumber string, carColor string) error
@@ -125,7 +125,7 @@ func (svc *ParkingLotService) Leave(slotNumber int) error {
 	return nil
 }
 
-func (svc *ParkingLotService) PrintStatus() error {
+func (svc *ParkingLotService) GetStatus() error {
 	fmt.Println("Slot No.\tRegistration No\t\tColour")
 	for idx, slot := range svc.parkingSlots {
 		if slot.parkedCar == nil {
@@ -138,7 +138,7 @@ func (svc *ParkingLotService) PrintStatus() error {
 	return nil
 }
 
-func (svc *ParkingLotService) PrintParkedCarNumbersByColor(carColor string) error {
+func (svc *ParkingLotService) GetParkedCarNumbersByColor(carColor string) error {
 	if len(carColor) == 0 {
 		return errors.New("car's color is invalid")
 	}
@@ -160,7 +160,7 @@ func (svc *ParkingLotService) PrintParkedCarNumbersByColor(carColor string) erro
 	return nil
 }
 
-func (svc *ParkingLotService) PrintParkedSlotNumbersByColor(carColor string) error {
+func (svc *ParkingLotService) GetParkedSlotNumbersByColor(carColor string) error {
 	if len(carColor) == 0 {
 		return errors.New("car's color is invalid")
 	}
@@ -183,7 +183,7 @@ func (svc *ParkingLotService) PrintParkedSlotNumbersByColor(carColor string) err
 	return nil
 }
 
-func (svc *ParkingLotService) PrintParkedSlotNumberByCarNumber(carNumber string) error {
+func (svc *ParkingLotService) GetParkedSlotNumberByCarNumber(carNumber string) error {
 	if len(carNumber) == 0 {
 		return errors.New("car's number is invalid")
 	}
