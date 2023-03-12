@@ -8,10 +8,10 @@ import (
 )
 
 type IParkingLotService interface {
-	CreateParkingLot(slotAmount int) error
+	CreateParkingLot(slotAmount int) ([]*parkingSlot, error)
 	Park(carNumber string, carColor string) (int, error)
 	Leave(slotNumber int) error
-	GetStatus() error
+	GetStatus() (string, error)
 	GetParkedCarNumbersByColor(carColor string) error
 	GetParkedSlotNumbersByColor(carColor string) error
 	GetParkedSlotNumberByCarNumber(carNumber string) error
@@ -25,34 +25,31 @@ type IParkingLotService interface {
 }
 
 type ParkingLotService struct {
-	parkingSlots          []*parkingSlot
+	store IParkingLotStore
+
+	// Local cache
 	carNumbersByColor     map[string]map[string]struct{}
 	slotNumbersByColor    map[string]map[int]struct{}
 	slotNumberByCarNumber map[string]int
 }
 
 func NewParkingLotService() *ParkingLotService {
+	parkingLotStore := NewParkingLotStore()
 	return &ParkingLotService{
+		store:                 parkingLotStore,
 		carNumbersByColor:     map[string]map[string]struct{}{},
 		slotNumbersByColor:    map[string]map[int]struct{}{},
 		slotNumberByCarNumber: map[string]int{},
 	}
 }
 
-func (svc *ParkingLotService) CreateParkingLot(slotAmount int) error {
-	if len(svc.parkingSlots) > 0 {
-		return errors.New("parking lot was already created")
-	}
-	if slotAmount < 1 {
-		return errors.New("slot amount must be greater than 0")
+func (svc *ParkingLotService) CreateParkingLot(slotAmount int) ([]*parkingSlot, error) {
+	parkingSlots, err := svc.store.CreateParkingLot(slotAmount)
+	if err != nil {
+		return nil, err
 	}
 
-	for i := 0; i < slotAmount; i++ {
-		svc.parkingSlots = append(svc.parkingSlots, &parkingSlot{})
-	}
-	fmt.Printf("Created a parking lot with %d slots\n", slotAmount)
-
-	return nil
+	return parkingSlots, nil
 }
 
 func (svc *ParkingLotService) Park(carNumber string, carColor string) (int, error) {
@@ -63,36 +60,33 @@ func (svc *ParkingLotService) Park(carNumber string, carColor string) (int, erro
 		return 0, errors.New("car's color is empty")
 	}
 
-	carColor = strings.ToLower(carColor)
+	parkingSlots, err := svc.store.GetParkingSlots()
+	if err != nil {
+		return 0, err
+	}
 
-	for idx, slot := range svc.parkingSlots {
+	carColor = strings.ToLower(carColor)
+	for idx, slot := range parkingSlots {
+		// Skip if the current lot is occupied.
 		if slot.parkedCar != nil {
 			continue
 		}
 
+		// Update parking lot data.
+		parkedCar := &car{}
+		parkedCar.registrationNumber = carNumber
+		parkedCar.color = carColor
+		_, err := svc.store.UpdateParkingLot(idx, parkedCar)
+		if err != nil {
+			return 0, err
+		}
+
+		// Update local cache.
 		slotNumber := idx + 1
+		svc.addCarNumberToColorCache(carNumber, carColor)
+		svc.addSlotToColorCache(slotNumber, carColor)
+		svc.addSlotToCarNumberCache(slotNumber, carNumber)
 
-		slot.parkedCar = &car{}
-		slot.parkedCar.registrationNumber = carNumber
-		slot.parkedCar.color = carColor
-
-		err := svc.addCarNumberToColorCache(carNumber, carColor)
-		if err != nil {
-			slot.parkedCar = nil
-			return 0, errors.Join(err)
-		}
-		err = svc.addSlotToColorCache(slotNumber, carColor)
-		if err != nil {
-			slot.parkedCar = nil
-			return 0, errors.Join(err)
-		}
-		err = svc.addSlotToCarNumberCache(slotNumber, carNumber)
-		if err != nil {
-			slot.parkedCar = nil
-			return 0, errors.Join(err)
-		}
-
-		fmt.Printf("Allocated slot number: %d\n", slotNumber)
 		return slotNumber, nil
 	}
 
@@ -100,42 +94,47 @@ func (svc *ParkingLotService) Park(carNumber string, carColor string) (int, erro
 }
 
 func (svc *ParkingLotService) Leave(slotNumber int) error {
-	if slotNumber < 1 || slotNumber > len(svc.parkingSlots) {
-		return errors.New("slot number is invalid")
+	parkingSlot, err := svc.store.GetParkingSlotDetail(slotNumber - 1)
+	if err != nil {
+		return err
 	}
 
-	carColor := svc.parkingSlots[slotNumber-1].parkedCar.color
-	carNumber := svc.parkingSlots[slotNumber-1].parkedCar.registrationNumber
-	err := svc.removeCarNumberFromColorCache(carNumber, carColor)
-	if err != nil {
-		return errors.Join(err)
+	if parkingSlot == nil {
+		return errors.New("this slot is not available")
 	}
-	err = svc.removeSlotFromColorCache(slotNumber, carColor)
-	if err != nil {
-		return errors.Join(err)
-	}
-	err = svc.removeSlotFromCarNumberCache(svc.parkingSlots[slotNumber-1].parkedCar.registrationNumber)
-	if err != nil {
-		return errors.Join(err)
+	if parkingSlot.parkedCar == nil {
+		return errors.New("this slot is not occupied")
 	}
 
-	svc.parkingSlots[slotNumber-1].parkedCar = nil
-	fmt.Printf("Slot number %d is free\n", slotNumber)
+	_, err = svc.store.UpdateParkingLot(slotNumber-1, nil)
+	if err != nil {
+		return err
+	}
+
+	carColor := parkingSlot.parkedCar.color
+	carNumber := parkingSlot.parkedCar.registrationNumber
+	svc.removeCarNumberFromColorCache(carNumber, carColor)
+	svc.removeSlotFromColorCache(slotNumber, carColor)
+	svc.removeSlotFromCarNumberCache(carNumber)
 
 	return nil
 }
 
-func (svc *ParkingLotService) GetStatus() error {
-	fmt.Println("Slot No.\tRegistration No\t\tColour")
-	for idx, slot := range svc.parkingSlots {
+func (svc *ParkingLotService) GetStatus() (string, error) {
+	parkingSlots, err := svc.store.GetParkingSlots()
+	if err != nil {
+		return "", err
+	}
+
+	status := ""
+	for idx, slot := range parkingSlots {
 		if slot.parkedCar == nil {
 			continue
 		}
-
-		fmt.Printf("%d\t\t%s\t\t%s\n", idx, slot.parkedCar.registrationNumber, slot.parkedCar.color)
+		status += fmt.Sprintf("%d\t\t%s\t\t%s\n", idx, slot.parkedCar.registrationNumber, slot.parkedCar.color)
 	}
 
-	return nil
+	return status, nil
 }
 
 func (svc *ParkingLotService) GetParkedCarNumbersByColor(carColor string) error {
@@ -236,7 +235,7 @@ func (svc *ParkingLotService) removeCarNumberFromColorCache(carNumber string, ca
 }
 
 func (svc *ParkingLotService) addSlotToColorCache(slotNumber int, carColor string) error {
-	if slotNumber < 1 || slotNumber > len(svc.parkingSlots) {
+	if slotNumber < 1 {
 		return errors.New("slot number is invalid")
 	}
 	if len(carColor) == 0 {
@@ -257,7 +256,7 @@ func (svc *ParkingLotService) addSlotToColorCache(slotNumber int, carColor strin
 }
 
 func (svc *ParkingLotService) removeSlotFromColorCache(slotNumber int, carColor string) error {
-	if slotNumber < 1 || slotNumber > len(svc.parkingSlots) {
+	if slotNumber < 1 {
 		return errors.New("slot number is invalid")
 	}
 	if len(carColor) == 0 {
@@ -273,7 +272,7 @@ func (svc *ParkingLotService) removeSlotFromColorCache(slotNumber int, carColor 
 }
 
 func (svc *ParkingLotService) addSlotToCarNumberCache(slotNumber int, carNumber string) error {
-	if slotNumber < 1 || slotNumber > len(svc.parkingSlots) {
+	if slotNumber < 1 {
 		return errors.New("slot number is invalid")
 	}
 	if len(carNumber) == 0 {

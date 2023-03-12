@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -37,11 +38,12 @@ func (h parkingLotHandler) CreateParkingLot(input string) error {
 	if err != nil {
 		return err
 	}
-	err = h.parkingLotSvc.CreateParkingLot(slotAmount)
+	parkingSlots, err := h.parkingLotSvc.CreateParkingLot(slotAmount)
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Created a parking lot with %d slots\n", len(parkingSlots))
 	return nil
 }
 
@@ -50,11 +52,12 @@ func (h parkingLotHandler) Park(input string) error {
 	if len(subStrings) != 3 {
 		return errors.New("invalid format")
 	}
-	_, err := h.parkingLotSvc.Park(subStrings[1], subStrings[2])
+	parkedSlotNumber, err := h.parkingLotSvc.Park(subStrings[1], subStrings[2])
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Allocated slot number: %d\n", parkedSlotNumber)
 	return nil
 }
 
@@ -63,23 +66,27 @@ func (h parkingLotHandler) Leave(input string) error {
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
 	}
-	slotAmount, err := strconv.Atoi(subStrings[1])
+	slotNumber, err := strconv.Atoi(subStrings[1])
 	if err != nil {
 		return err
 	}
-	err = h.parkingLotSvc.Leave(slotAmount)
+	err = h.parkingLotSvc.Leave(slotNumber)
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Slot number %d is free\n", slotNumber)
 	return nil
 }
 
 func (h parkingLotHandler) GetStatus() error {
-	err := h.parkingLotSvc.GetStatus()
+	status, err := h.parkingLotSvc.GetStatus()
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("Slot No.\tRegistration No\t\tColour")
+	fmt.Println(status)
 
 	return nil
 }
