@@ -9,7 +9,9 @@ import (
 )
 
 func main() {
-	parkingLotHandler := NewParkingLotHandler()
+	parkingLotStore := NewParkingLotStore()
+	parkingLotSvc := NewParkingLotService(parkingLotStore)
+	parkingLotHandler := NewParkingLotHandler(parkingLotSvc)
 	start(parkingLotHandler)
 }
 

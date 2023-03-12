@@ -33,8 +33,7 @@ type ParkingLotService struct {
 	slotNumberByCarNumber map[string]int
 }
 
-func NewParkingLotService() *ParkingLotService {
-	parkingLotStore := NewParkingLotStore()
+func NewParkingLotService(parkingLotStore IParkingLotStore) *ParkingLotService {
 	return &ParkingLotService{
 		store:                 parkingLotStore,
 		carNumbersByColor:     map[string]map[string]struct{}{},

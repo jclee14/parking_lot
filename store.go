@@ -4,9 +4,9 @@ import "errors"
 
 type IParkingLotStore interface {
 	CreateParkingLot(slotAmount int) ([]*parkingSlot, error)
-	UpdateParkingLot(slotNumber int, car *car) ([]*parkingSlot, error)
+	UpdateParkingLot(slotIndex int, car *car) ([]*parkingSlot, error)
 	GetParkingSlots() ([]*parkingSlot, error)
-	GetParkingSlotDetail(slotNumber int) (*parkingSlot, error)
+	GetParkingSlotDetail(slotIndex int) (*parkingSlot, error)
 }
 
 type parkingLotStore struct {
@@ -34,15 +34,15 @@ func (svc *parkingLotStore) CreateParkingLot(slotAmount int) ([]*parkingSlot, er
 	return svc.parkingSlots, nil
 }
 
-func (svc *parkingLotStore) UpdateParkingLot(slotNumber int, car *car) ([]*parkingSlot, error) {
-	if slotNumber < 0 {
+func (svc *parkingLotStore) UpdateParkingLot(slotIndex int, car *car) ([]*parkingSlot, error) {
+	if slotIndex < 0 {
 		return nil, errors.New("slot number must be greater than 0")
 	}
-	if slotNumber > len(svc.parkingSlots)-1 {
+	if slotIndex > len(svc.parkingSlots)-1 {
 		return nil, errors.New("slot amount is not available")
 	}
 
-	svc.parkingSlots[slotNumber].parkedCar = car
+	svc.parkingSlots[slotIndex].parkedCar = car
 	return svc.parkingSlots, nil
 }
 
@@ -54,16 +54,16 @@ func (svc *parkingLotStore) GetParkingSlots() ([]*parkingSlot, error) {
 	return svc.parkingSlots, nil
 }
 
-func (svc *parkingLotStore) GetParkingSlotDetail(slotNumber int) (*parkingSlot, error) {
+func (svc *parkingLotStore) GetParkingSlotDetail(slotIndex int) (*parkingSlot, error) {
 	if svc.parkingSlots == nil {
 		return nil, errors.New("parking lot is not created yet")
 	}
-	if slotNumber < 0 {
+	if slotIndex < 0 {
 		return nil, errors.New("slot number must be greater than 0")
 	}
-	if slotNumber > len(svc.parkingSlots)-1 {
+	if slotIndex > len(svc.parkingSlots)-1 {
 		return nil, errors.New("slot amount is not available")
 	}
 
-	return svc.parkingSlots[slotNumber], nil
+	return svc.parkingSlots[slotIndex], nil
 }

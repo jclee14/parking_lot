@@ -21,9 +21,7 @@ type parkingLotHandler struct {
 	parkingLotSvc IParkingLotService
 }
 
-func NewParkingLotHandler() parkingLotHandler {
-	parkingLotSvc := NewParkingLotService()
-
+func NewParkingLotHandler(parkingLotSvc IParkingLotService) parkingLotHandler {
 	return parkingLotHandler{
 		parkingLotSvc: parkingLotSvc,
 	}
