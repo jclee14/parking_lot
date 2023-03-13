@@ -94,10 +94,12 @@ func (h parkingLotHandler) GetParkedCarNumbersByColor(input string) error {
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
 	}
-	err := h.parkingLotSvc.GetParkedCarNumbersByColor(subStrings[1])
+	data, err := h.parkingLotSvc.GetParkedCarNumbersByColor(subStrings[1])
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(data)
 
 	return nil
 }
@@ -107,10 +109,12 @@ func (h parkingLotHandler) GetParkedSlotNumbersByColor(input string) error {
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
 	}
-	err := h.parkingLotSvc.GetParkedSlotNumbersByColor(subStrings[1])
+	data, err := h.parkingLotSvc.GetParkedSlotNumbersByColor(subStrings[1])
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(data)
 
 	return nil
 }
@@ -120,10 +124,12 @@ func (h parkingLotHandler) GetParkedSlotNumberByCarNumber(input string) error {
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
 	}
-	err := h.parkingLotSvc.GetParkedSlotNumberByCarNumber(subStrings[1])
+	data, err := h.parkingLotSvc.GetParkedSlotNumberByCarNumber(subStrings[1])
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(data)
 
 	return nil
 }

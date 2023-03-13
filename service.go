@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 type IParkingLotService interface {
@@ -12,9 +13,9 @@ type IParkingLotService interface {
 	Park(carNumber string, carColor string) (int, error)
 	Leave(slotNumber int) error
 	GetStatus() (string, error)
-	GetParkedCarNumbersByColor(carColor string) error
-	GetParkedSlotNumbersByColor(carColor string) error
-	GetParkedSlotNumberByCarNumber(carNumber string) error
+	GetParkedCarNumbersByColor(carColor string) (string, error)
+	GetParkedSlotNumbersByColor(carColor string) (string, error)
+	GetParkedSlotNumberByCarNumber(carNumber string) (int, error)
 
 	addCarNumberToColorCache(carNumber string, carColor string) error
 	removeCarNumberFromColorCache(carNumber string, carColor string) error
@@ -130,20 +131,23 @@ func (svc *ParkingLotService) GetStatus() (string, error) {
 		if slot.parkedCar == nil {
 			continue
 		}
-		status += fmt.Sprintf("%d\t\t%s\t\t%s\n", idx, slot.parkedCar.registrationNumber, slot.parkedCar.color)
+		r := []rune(slot.parkedCar.color)
+		r[0] = unicode.ToUpper(r[0])
+		formatColor := string(r)
+		status += fmt.Sprintf("%d\t\t%s\t\t%s\n", idx+1, slot.parkedCar.registrationNumber, formatColor)
 	}
 
 	return status, nil
 }
 
-func (svc *ParkingLotService) GetParkedCarNumbersByColor(carColor string) error {
+func (svc *ParkingLotService) GetParkedCarNumbersByColor(carColor string) (string, error) {
 	if len(carColor) == 0 {
-		return errors.New("car's color is invalid")
+		return "", errors.New("car's color is invalid")
 	}
 
 	cData, ok := svc.carNumbersByColor[carColor]
 	if !ok {
-		return errors.New("not found")
+		return "", errors.New("not found")
 	}
 
 	results := make([]string, 0, len(cData))
@@ -153,47 +157,39 @@ func (svc *ParkingLotService) GetParkedCarNumbersByColor(carColor string) error 
 		}
 		results = append(results, carNumber)
 	}
-	fmt.Println(strings.Join(results, ", "))
 
-	return nil
+	return strings.Join(results, ", "), nil
 }
 
-func (svc *ParkingLotService) GetParkedSlotNumbersByColor(carColor string) error {
+func (svc *ParkingLotService) GetParkedSlotNumbersByColor(carColor string) (string, error) {
 	if len(carColor) == 0 {
-		return errors.New("car's color is invalid")
+		return "", errors.New("car's color is invalid")
 	}
 
 	cData, ok := svc.slotNumbersByColor[carColor]
 	if !ok {
-		return errors.New("not found")
+		return "", errors.New("not found")
 	}
 
 	results := make([]string, 0, len(cData))
 	for slotNumber := range cData {
-		slotStr := strconv.Itoa(slotNumber)
-		if len(slotStr) == 0 {
-			continue
-		}
-		results = append(results, strconv.Itoa(slotNumber))
+		results = append(results, strconv.Itoa(slotNumber+1))
 	}
-	fmt.Println(strings.Join(results, ", "))
 
-	return nil
+	return strings.Join(results, ", "), nil
 }
 
-func (svc *ParkingLotService) GetParkedSlotNumberByCarNumber(carNumber string) error {
+func (svc *ParkingLotService) GetParkedSlotNumberByCarNumber(carNumber string) (int, error) {
 	if len(carNumber) == 0 {
-		return errors.New("car's number is invalid")
+		return 0, errors.New("car's number is invalid")
 	}
 
 	slotNumber, ok := svc.slotNumberByCarNumber[carNumber]
 	if !ok {
-		return errors.New("not found")
+		return 0, errors.New("not found")
 	}
 
-	fmt.Println(slotNumber)
-
-	return nil
+	return slotNumber + 1, nil
 }
 
 func (svc *ParkingLotService) addCarNumberToColorCache(carNumber string, carColor string) error {
