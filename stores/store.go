@@ -1,23 +1,26 @@
-package main
+package stores
 
-import "errors"
+import (
+	"errors"
+	"parking_lot/models"
+)
 
 type IParkingLotStore interface {
-	CreateParkingLot(slotAmount int) ([]*parkingSlot, error)
-	UpdateParkingLot(slotIndex int, car *car) ([]*parkingSlot, error)
-	GetParkingSlots() ([]*parkingSlot, error)
-	GetParkingSlotDetail(slotIndex int) (*parkingSlot, error)
+	CreateParkingLot(slotAmount int) ([]*models.ParkingSlot, error)
+	UpdateParkingLot(slotIndex int, car *models.Car) ([]*models.ParkingSlot, error)
+	GetParkingSlots() ([]*models.ParkingSlot, error)
+	GetParkingSlotDetail(slotIndex int) (*models.ParkingSlot, error)
 }
 
 type parkingLotStore struct {
-	parkingSlots []*parkingSlot
+	parkingSlots []*models.ParkingSlot
 }
 
 func NewParkingLotStore() *parkingLotStore {
 	return &parkingLotStore{}
 }
 
-func (svc *parkingLotStore) CreateParkingLot(slotAmount int) ([]*parkingSlot, error) {
+func (svc *parkingLotStore) CreateParkingLot(slotAmount int) ([]*models.ParkingSlot, error) {
 	if slotAmount < 1 {
 		return nil, errors.New("slot amount must be greater than 0")
 	}
@@ -28,13 +31,13 @@ func (svc *parkingLotStore) CreateParkingLot(slotAmount int) ([]*parkingSlot, er
 	}
 
 	for i := 0; i < slotAmount; i++ {
-		svc.parkingSlots = append(svc.parkingSlots, &parkingSlot{})
+		svc.parkingSlots = append(svc.parkingSlots, &models.ParkingSlot{})
 	}
 
 	return svc.parkingSlots, nil
 }
 
-func (svc *parkingLotStore) UpdateParkingLot(slotIndex int, car *car) ([]*parkingSlot, error) {
+func (svc *parkingLotStore) UpdateParkingLot(slotIndex int, car *models.Car) ([]*models.ParkingSlot, error) {
 	if slotIndex < 0 {
 		return nil, errors.New("slot number must be greater than 0")
 	}
@@ -42,11 +45,11 @@ func (svc *parkingLotStore) UpdateParkingLot(slotIndex int, car *car) ([]*parkin
 		return nil, errors.New("slot amount is not available")
 	}
 
-	svc.parkingSlots[slotIndex].parkedCar = car
+	svc.parkingSlots[slotIndex].ParkedCar = car
 	return svc.parkingSlots, nil
 }
 
-func (svc *parkingLotStore) GetParkingSlots() ([]*parkingSlot, error) {
+func (svc *parkingLotStore) GetParkingSlots() ([]*models.ParkingSlot, error) {
 	if svc.parkingSlots == nil {
 		return nil, errors.New("parking lot is not created yet")
 	}
@@ -54,7 +57,7 @@ func (svc *parkingLotStore) GetParkingSlots() ([]*parkingSlot, error) {
 	return svc.parkingSlots, nil
 }
 
-func (svc *parkingLotStore) GetParkingSlotDetail(slotIndex int) (*parkingSlot, error) {
+func (svc *parkingLotStore) GetParkingSlotDetail(slotIndex int) (*models.ParkingSlot, error) {
 	if svc.parkingSlots == nil {
 		return nil, errors.New("parking lot is not created yet")
 	}

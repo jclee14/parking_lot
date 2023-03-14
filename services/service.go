@@ -1,15 +1,17 @@
-package main
+package services
 
 import (
 	"errors"
 	"fmt"
+	"parking_lot/models"
+	"parking_lot/stores"
 	"strconv"
 	"strings"
 	"unicode"
 )
 
 type IParkingLotService interface {
-	CreateParkingLot(slotAmount int) ([]*parkingSlot, error)
+	CreateParkingLot(slotAmount int) ([]*models.ParkingSlot, error)
 	Park(carNumber string, carColor string) (int, error)
 	Leave(slotNumber int) error
 	GetStatus() (string, error)
@@ -17,16 +19,16 @@ type IParkingLotService interface {
 	GetParkedSlotNumbersByColor(carColor string) (string, error)
 	GetParkedSlotNumberByCarNumber(carNumber string) (int, error)
 
-	addCarNumberToColorCache(carNumber string, carColor string) error
-	removeCarNumberFromColorCache(carNumber string, carColor string) error
-	addSlotToColorCache(slotNumber int, carColor string) error
-	removeSlotFromColorCache(slotNumber int, carColor string) error
-	addSlotToCarNumberCache(slotNumber int, carNumber string) error
-	removeSlotFromCarNumberCache(carNumber string) error
+	// addCarNumberToColorCache(carNumber string, carColor string) error
+	// removeCarNumberFromColorCache(carNumber string, carColor string) error
+	// addSlotToColorCache(slotNumber int, carColor string) error
+	// removeSlotFromColorCache(slotNumber int, carColor string) error
+	// addSlotToCarNumberCache(slotNumber int, carNumber string) error
+	// removeSlotFromCarNumberCache(carNumber string) error
 }
 
 type ParkingLotService struct {
-	store IParkingLotStore
+	store stores.IParkingLotStore
 
 	// Local cache
 	carNumbersByColor     map[string]map[string]struct{}
@@ -34,7 +36,7 @@ type ParkingLotService struct {
 	slotNumberByCarNumber map[string]int
 }
 
-func NewParkingLotService(parkingLotStore IParkingLotStore) *ParkingLotService {
+func NewParkingLotService(parkingLotStore stores.IParkingLotStore) *ParkingLotService {
 	return &ParkingLotService{
 		store:                 parkingLotStore,
 		carNumbersByColor:     map[string]map[string]struct{}{},
@@ -43,7 +45,7 @@ func NewParkingLotService(parkingLotStore IParkingLotStore) *ParkingLotService {
 	}
 }
 
-func (svc *ParkingLotService) CreateParkingLot(slotAmount int) ([]*parkingSlot, error) {
+func (svc *ParkingLotService) CreateParkingLot(slotAmount int) ([]*models.ParkingSlot, error) {
 	parkingSlots, err := svc.store.CreateParkingLot(slotAmount)
 	if err != nil {
 		return nil, err
@@ -68,14 +70,14 @@ func (svc *ParkingLotService) Park(carNumber string, carColor string) (int, erro
 	carColor = strings.ToLower(carColor)
 	for idx, slot := range parkingSlots {
 		// Skip if the current lot is occupied.
-		if slot.parkedCar != nil {
+		if slot.ParkedCar != nil {
 			continue
 		}
 
 		// Update parking lot data.
-		parkedCar := &car{}
-		parkedCar.registrationNumber = carNumber
-		parkedCar.color = carColor
+		parkedCar := &models.Car{}
+		parkedCar.RegistrationNumber = carNumber
+		parkedCar.Color = carColor
 		_, err := svc.store.UpdateParkingLot(idx, parkedCar)
 		if err != nil {
 			return 0, err
@@ -102,7 +104,7 @@ func (svc *ParkingLotService) Leave(slotNumber int) error {
 	if parkingSlot == nil {
 		return errors.New("this slot is not available")
 	}
-	if parkingSlot.parkedCar == nil {
+	if parkingSlot.ParkedCar == nil {
 		return errors.New("this slot is not occupied")
 	}
 
@@ -111,8 +113,8 @@ func (svc *ParkingLotService) Leave(slotNumber int) error {
 		return err
 	}
 
-	carColor := parkingSlot.parkedCar.color
-	carNumber := parkingSlot.parkedCar.registrationNumber
+	carColor := parkingSlot.ParkedCar.Color
+	carNumber := parkingSlot.ParkedCar.RegistrationNumber
 	svc.removeCarNumberFromColorCache(carNumber, carColor)
 	svc.removeSlotFromColorCache(slotNumber, carColor)
 	svc.removeSlotFromCarNumberCache(carNumber)
@@ -128,13 +130,13 @@ func (svc *ParkingLotService) GetStatus() (string, error) {
 
 	status := ""
 	for idx, slot := range parkingSlots {
-		if slot.parkedCar == nil {
+		if slot.ParkedCar == nil {
 			continue
 		}
-		r := []rune(slot.parkedCar.color)
+		r := []rune(slot.ParkedCar.Color)
 		r[0] = unicode.ToUpper(r[0])
 		formatColor := string(r)
-		status += fmt.Sprintf("%d\t\t%s\t\t%s\n", idx+1, slot.parkedCar.registrationNumber, formatColor)
+		status += fmt.Sprintf("%d\t\t%s\t\t%s\n", idx+1, slot.ParkedCar.RegistrationNumber, formatColor)
 	}
 
 	return status, nil

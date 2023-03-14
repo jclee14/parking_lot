@@ -5,17 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"parking_lot/handlers"
+	"parking_lot/services"
+	"parking_lot/stores"
 	"strings"
 )
 
 func main() {
-	parkingLotStore := NewParkingLotStore()
-	parkingLotSvc := NewParkingLotService(parkingLotStore)
-	parkingLotHandler := NewParkingLotHandler(parkingLotSvc)
+	parkingLotStore := stores.NewParkingLotStore()
+	parkingLotSvc := services.NewParkingLotService(parkingLotStore)
+	parkingLotHandler := handlers.NewParkingLotHandler(parkingLotSvc)
 	start(parkingLotHandler)
 }
 
-func start(parkingLotHandler IParkingLotHandler) {
+func start(parkingLotHandler handlers.ParkingLotHandler) {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {

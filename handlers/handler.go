@@ -1,33 +1,34 @@
-package main
+package handlers
 
 import (
 	"errors"
 	"fmt"
+	"parking_lot/services"
 	"strconv"
 	"strings"
 )
 
-type IParkingLotHandler interface {
-	CreateParkingLot(input string) error
-	Park(input string) error
-	Leave(input string) error
-	GetStatus() error
-	GetParkedCarNumbersByColor(input string) error
-	GetParkedSlotNumbersByColor(input string) error
-	GetParkedSlotNumberByCarNumber(input string) error
+// type IParkingLotHandler interface {
+// 	CreateParkingLot(input string) error
+// 	Park(input string) error
+// 	Leave(input string) error
+// 	GetStatus() error
+// 	GetParkedCarNumbersByColor(input string) error
+// 	GetParkedSlotNumbersByColor(input string) error
+// 	GetParkedSlotNumberByCarNumber(input string) error
+// }
+
+type ParkingLotHandler struct {
+	parkingLotSvc services.IParkingLotService
 }
 
-type parkingLotHandler struct {
-	parkingLotSvc IParkingLotService
-}
-
-func NewParkingLotHandler(parkingLotSvc IParkingLotService) parkingLotHandler {
-	return parkingLotHandler{
+func NewParkingLotHandler(parkingLotSvc services.IParkingLotService) ParkingLotHandler {
+	return ParkingLotHandler{
 		parkingLotSvc: parkingLotSvc,
 	}
 }
 
-func (h parkingLotHandler) CreateParkingLot(input string) error {
+func (h ParkingLotHandler) CreateParkingLot(input string) error {
 	subStrings := strings.Split(input, " ")
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
@@ -45,7 +46,7 @@ func (h parkingLotHandler) CreateParkingLot(input string) error {
 	return nil
 }
 
-func (h parkingLotHandler) Park(input string) error {
+func (h ParkingLotHandler) Park(input string) error {
 	subStrings := strings.Split(input, " ")
 	if len(subStrings) != 3 {
 		return errors.New("invalid format")
@@ -59,7 +60,7 @@ func (h parkingLotHandler) Park(input string) error {
 	return nil
 }
 
-func (h parkingLotHandler) Leave(input string) error {
+func (h ParkingLotHandler) Leave(input string) error {
 	subStrings := strings.Split(input, " ")
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
@@ -77,7 +78,7 @@ func (h parkingLotHandler) Leave(input string) error {
 	return nil
 }
 
-func (h parkingLotHandler) GetStatus() error {
+func (h ParkingLotHandler) GetStatus() error {
 	status, err := h.parkingLotSvc.GetStatus()
 	if err != nil {
 		return err
@@ -89,7 +90,7 @@ func (h parkingLotHandler) GetStatus() error {
 	return nil
 }
 
-func (h parkingLotHandler) GetParkedCarNumbersByColor(input string) error {
+func (h ParkingLotHandler) GetParkedCarNumbersByColor(input string) error {
 	subStrings := strings.Split(input, " ")
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
@@ -104,7 +105,7 @@ func (h parkingLotHandler) GetParkedCarNumbersByColor(input string) error {
 	return nil
 }
 
-func (h parkingLotHandler) GetParkedSlotNumbersByColor(input string) error {
+func (h ParkingLotHandler) GetParkedSlotNumbersByColor(input string) error {
 	subStrings := strings.Split(input, " ")
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
@@ -119,7 +120,7 @@ func (h parkingLotHandler) GetParkedSlotNumbersByColor(input string) error {
 	return nil
 }
 
-func (h parkingLotHandler) GetParkedSlotNumberByCarNumber(input string) error {
+func (h ParkingLotHandler) GetParkedSlotNumberByCarNumber(input string) error {
 	subStrings := strings.Split(input, " ")
 	if len(subStrings) != 2 {
 		return errors.New("invalid format")
