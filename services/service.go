@@ -18,13 +18,6 @@ type IParkingLotService interface {
 	GetParkedCarNumbersByColor(carColor string) (string, error)
 	GetParkedSlotNumbersByColor(carColor string) (string, error)
 	GetParkedSlotNumberByCarNumber(carNumber string) (int, error)
-
-	// addCarNumberToColorCache(carNumber string, carColor string) error
-	// removeCarNumberFromColorCache(carNumber string, carColor string) error
-	// addSlotToColorCache(slotNumber int, carColor string) error
-	// removeSlotFromColorCache(slotNumber int, carColor string) error
-	// addSlotToCarNumberCache(slotNumber int, carNumber string) error
-	// removeSlotFromCarNumberCache(carNumber string) error
 }
 
 type ParkingLotService struct {
@@ -148,7 +141,7 @@ func (svc *ParkingLotService) GetParkedCarNumbersByColor(carColor string) (strin
 	}
 
 	cData, ok := svc.carNumbersByColor[carColor]
-	if !ok {
+	if !ok || len(cData) == 0 {
 		return "", errors.New("not found")
 	}
 
@@ -169,7 +162,7 @@ func (svc *ParkingLotService) GetParkedSlotNumbersByColor(carColor string) (stri
 	}
 
 	cData, ok := svc.slotNumbersByColor[carColor]
-	if !ok {
+	if !ok || len(cData) == 0 {
 		return "", errors.New("not found")
 	}
 

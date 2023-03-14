@@ -1,14 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"os"
 	"parking_lot/handlers"
+	"parking_lot/models"
 	"parking_lot/services"
 	"parking_lot/stores"
-	"strings"
 )
 
 func main() {
@@ -19,60 +17,56 @@ func main() {
 }
 
 func start(parkingLotHandler handlers.ParkingLotHandler) {
-	reader := bufio.NewReader(os.Stdin)
-
 	for {
-		input, _ := reader.ReadString('\n')
-		// convert CRLF to LF
-		// input = strings.Replace(input, "\n", "", -1)
-		input = strings.TrimSpace(strings.Replace(input, "\r\n", "", -1))
-		if strings.HasPrefix(input, "create_parking_lot") {
-			err := parkingLotHandler.CreateParkingLot(input)
+		var command models.CommandSet
+		var arg1, arg2 string
+		fmt.Scanf("%s %s %s\n", &command, &arg1, &arg2)
+		exitProgram := false
+
+		switch command {
+		case models.CommandSetCreateParkingLot:
+			err := parkingLotHandler.CreateParkingLot(arg1)
 			if err != nil {
 				fmt.Println(err)
-				continue
 			}
-		} else if strings.HasPrefix(input, "park") {
-			err := parkingLotHandler.Park(input)
+		case models.CommandSetPark:
+			err := parkingLotHandler.Park(arg1, arg2)
 			if err != nil {
 				fmt.Println(err)
-				continue
 			}
-		} else if strings.HasPrefix(input, "leave") {
-			err := parkingLotHandler.Leave(input)
+		case models.CommandSetLeave:
+			err := parkingLotHandler.Leave(arg1)
 			if err != nil {
 				fmt.Println(err)
-				continue
 			}
-		} else if strings.HasPrefix(input, "status") {
+		case models.CommandSetStatus:
 			err := parkingLotHandler.GetStatus()
 			if err != nil {
 				fmt.Println(err)
-				continue
 			}
-		} else if strings.HasPrefix(input, "registration_numbers_for_cars_with_colour") {
-			err := parkingLotHandler.GetParkedCarNumbersByColor(input)
+		case models.CommandSetRegistrationNumberForCarWithColor:
+			err := parkingLotHandler.GetParkedCarNumbersByColor(arg1)
 			if err != nil {
 				fmt.Println(err)
-				continue
 			}
-		} else if strings.HasPrefix(input, "slot_numbers_for_cars_with_colour") {
-			err := parkingLotHandler.GetParkedSlotNumbersByColor(input)
+		case models.CommandSetSlotNumbersForCarsWithColor:
+			err := parkingLotHandler.GetParkedSlotNumbersByColor(arg1)
 			if err != nil {
 				fmt.Println(err)
-				continue
 			}
-		} else if strings.HasPrefix(input, "slot_number_for_registration_number") {
-			err := parkingLotHandler.GetParkedSlotNumberByCarNumber(input)
+		case models.CommandSetSlotNumberForRegistrationNumber:
+			err := parkingLotHandler.GetParkedSlotNumberByCarNumber(arg1)
 			if err != nil {
 				fmt.Println(err)
-				continue
 			}
-		} else if strings.Contains(input, "exit") {
-			break
-		} else {
+		case models.CommandSetExit:
+			exitProgram = true
+		default:
 			fmt.Println(errors.New("command not found"))
-			continue
+		}
+
+		if exitProgram {
+			break
 		}
 	}
 }
