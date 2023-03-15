@@ -5,3 +5,9 @@
 #
 # After this is run, bin/parking_lot
 # should Just Work.
+
+go mod vendor
+
+go build
+
+go test ./...
